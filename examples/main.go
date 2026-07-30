@@ -30,16 +30,20 @@ func (u User) Display() {
 }
 
 func main() {
-
 	ctx := context.Background()
-	// Cache a user under the "users" tag
-	user, err := goredis.CacheGetOrFetch(ctx, redisClient, "user:42", 5*time.Minute,
+	cache := goredis.New(redisClient)
+
+	user, err := goredis.CacheGetOrFetch(ctx, cache, "user:42", 5*time.Minute,
 		func() (*User, error) {
 			return &User{ID: 42, Name: "Alice"}, nil
 		},
 		"users",
 	)
-	user, err = goredis.CacheGetOrFetch(ctx, redisClient, "user:43", 5*time.Minute,
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = goredis.CacheGetOrFetch(ctx, cache, "user:43", 5*time.Minute,
 		func() (*User, error) {
 			return &User{ID: 43, Name: "Alice"}, nil
 		},
@@ -48,20 +52,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	if user == nil {
-		goredis.InvalidateByTags(ctx, redisClient, "users")
+		cache.InvalidateByTags(ctx, "users")
 		return
 	}
 	user.Display()
 
-	// After a user update, clear all cached data tagged "users"
-	goredis.InvalidateByTags(ctx, redisClient, "users")
-	user, err = goredis.CacheGetOrFetch(ctx, redisClient, "user:42", 5*time.Minute,
+	cache.InvalidateByTags(ctx, "users")
+
+	user, err = goredis.CacheGetOrFetch(ctx, cache, "user:42", 5*time.Minute,
 		func() (*User, error) {
 			return nil, nil
 		},
 		"users",
 	)
+	if err != nil {
+		panic(err)
+	}
 	if user != nil {
 		user.Display()
 		return
