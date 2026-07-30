@@ -42,7 +42,7 @@ import (
 	"time"
 
 	logger "github.com/aruncs31s/gologger"
-	"github.com/redis/go-redis/v9"
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
