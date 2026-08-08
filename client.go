@@ -2,6 +2,8 @@ package goredis
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -168,4 +170,9 @@ func (c *Client) CacheSetMany(
 	}
 
 	return nil
+}
+
+func HashRequest(req any) string {
+	reqBytes, _ := json.Marshal(req)
+	return fmt.Sprintf("%x", sha256.Sum256(reqBytes))
 }
